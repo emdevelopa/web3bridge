@@ -34,7 +34,8 @@ contract SaveEtherAndToken {
 
         etherBalances[msg.sender] -= amount;
 
-        payable(msg.sender).transfer(amount);
+(bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Ether transfer failed");
     }
  
 
