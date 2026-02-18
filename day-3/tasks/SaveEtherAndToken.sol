@@ -7,7 +7,7 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
-contract SavingsVault {
+contract SaveEtherAndToken {
 
     // Ether balances
     mapping(address => uint256) private etherBalances;
