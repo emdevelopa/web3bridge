@@ -17,8 +17,8 @@ contract SaveEtherAndToken {
     }
 
 
-    function getEtherBal(){
-        
+    function getEtherBal(address user) public view returns(uint){
+        return etherBalances[user];
     }
 
 
