@@ -53,7 +53,7 @@ contract TwoBottles {
         allowances[msg.sender][spender] = value;
 
         emit Approval(msg.sender, spender, value);
--
+
         return true;
     }
 
