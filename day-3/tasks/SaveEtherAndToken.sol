@@ -21,7 +21,9 @@ contract SaveEtherAndToken {
         return etherBalances[user];
     }
 
-
+    function withdrawEther() public {
+        
+    }
 
 
 }
