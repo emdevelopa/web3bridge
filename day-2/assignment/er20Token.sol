@@ -36,7 +36,7 @@ contract TwoBottles {
     }
 
       //tranfers token from an account to another
-    function tranfer(address _to, uint256 _value) public returns(bool){
+    function transfer(address _to, uint256 _value) public returns(bool){
         require(BalanceOfAddress[msg.sender] >= _value, "Insufficient balance");
 
         BalanceOfAddress[msg.sender] = BalanceOfAddress[msg.sender] - _value;
