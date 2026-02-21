@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 contract SchoolSys {
-
     struct Student {
         uint256 id;
         string name;
@@ -33,7 +32,7 @@ contract SchoolSys {
     // Owner
     address public owner;
 
-   constructor() {
+    constructor() {
         owner = msg.sender;
 
         levelFees[100] = 0.5 ether;
@@ -42,9 +41,13 @@ contract SchoolSys {
         levelFees[400] = 2 ether;
     }
 
-
     // Events
-    event StudentRegistered(uint256 id, string name, uint256 level, bool feePaid);
+    event StudentRegistered(
+        uint256 id,
+        string name,
+        uint256 level,
+        bool feePaid
+    );
     event StaffRegistered(uint256 id, string name, string role);
     event FeePaid(uint256 studentId, uint256 amount, uint256 timestamp);
     event SalaryPaid(uint256 staffId, uint256 amount, uint256 timestamp);
@@ -63,5 +66,47 @@ contract SchoolSys {
         _;
     }
 
+    function registerStudent(
+        string memory _name,
+        uint256 _level
+    ) public payable validLevel(_level) {
+        uint256 requiredFee = levelFees[_level];
+        require(msg.value >= requiredFee, "Insufficient fee payment");
 
+        studentCount++;
+
+        students[studentCount] = Student({
+            id: studentCount,
+            name: _name,
+            level: _level,
+            walletAddress: msg.sender,
+            feePaid: true,
+            amountPaid: msg.value,
+            paymentTimestamp: block.timestamp
+        });
+
+        emit StudentRegistered(studentCount, _name, _level, true);
+        emit FeePaid(studentCount, msg.value, block.timestamp);
+    }
+
+    function registerStaff(
+        string memory _name,
+        string memory _role,
+        address _walletAddress,
+        uint256 _salary
+    ) public onlyOwner {
+        staffCount++;
+
+        staffs[staffCount] = Staff({
+            id: staffCount,
+            name: _name,
+            role: _role,
+            walletAddress: _walletAddress,
+            salary: _salary,
+            salaryPaid: false,
+            paymentTimestamp: 0
+        });
+
+        emit StaffRegistered(staffCount, _name, _role);
+    }
 }
