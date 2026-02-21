@@ -16,7 +16,6 @@ contract Todo {
         uint timeCompleted;
     }
 
-
     TodoFields[] Todos;
     uint8 todoId;
 
@@ -48,7 +47,9 @@ contract Todo {
     }
 
     function markCompleted(uint8 _id) external {
+        // check is todo exists before marking completed for delete, mark, unmark and update..
         for (uint i = 0; i < Todos.length; i++) {
+            require(Todos[i].id == _id, "Todo does not exist");
             if (Todos[i].id == _id) {
                 Todos[i].completed = true;
                 Todos[i].timeCompleted = block.timestamp;
@@ -58,6 +59,7 @@ contract Todo {
     }
     function markUnCompleted(uint8 _id) external {
         for (uint i = 0; i < Todos.length; i++) {
+            require(Todos[i].id == _id, "Todo does not exist");
             if (Todos[i].id == _id) {
                 Todos[i].completed = false;
                 Todos[i].timeCompleted = 0;
@@ -67,12 +69,12 @@ contract Todo {
     }
 
     function deleteTodo(uint _id) external {
-         for (uint i = 0; i < Todos.length; i++) {
+        for (uint i = 0; i < Todos.length; i++) {
+            require(Todos[i].id == _id, "Todo does not exist");
             if (Todos[i].id == _id) {
-               Todos[i] = Todos[Todos.length - 1];
-               Todos.pop();
+                Todos[i] = Todos[Todos.length - 1];
+                Todos.pop();
                 break;
-
             }
         }
     }
@@ -80,6 +82,7 @@ contract Todo {
     function updateTodo(uint _id, string memory _title) external {
         for (uint i = 0; i < Todos.length; i++) {
             if (Todos[i].id == _id) {
+                require(Todos[i].id == _id, "Todo does not exist");
                 require(
                     !Todos[i].completed,
                     "Todo completed, can't update it.."
