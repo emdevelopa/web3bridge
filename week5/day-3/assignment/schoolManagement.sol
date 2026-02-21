@@ -2,10 +2,20 @@
 pragma solidity ^0.8.0;
 
 interface IERC20 {
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
 }
 
 contract SchoolSys {
@@ -27,8 +37,8 @@ contract SchoolSys {
         uint256 salary;
         bool salaryPaid;
         uint256 paymentTimestamp;
-        bool isActive;      
-        bool isSuspended; 
+        bool isActive;
+        bool isSuspended;
     }
 
     mapping(uint256 => uint256) public levelFees;
@@ -71,7 +81,11 @@ contract SchoolSys {
     event StaffUnsuspended(uint256 staffId, uint256 timestamp);
     event StaffEmployed(uint256 staffId, string name, string role);
     event TokenFeesPaid(uint256 studentId, uint256 amount, uint256 timestamp);
-    event StaffPaidWithToken(uint256 staffId, uint256 amount, uint256 timestamp);
+    event StaffPaidWithToken(
+        uint256 staffId,
+        uint256 amount,
+        uint256 timestamp
+    );
 
     // Modifiers
     modifier onlyOwner() {
@@ -87,12 +101,37 @@ contract SchoolSys {
         _;
     }
 
+    modifier studentExists(uint256 _studentId) {
+        require(students[_studentId].id != 0, "Student does not exist");
+        require(!students[_studentId].isRemoved, "Student has been removed");
+        _;
+    }
+
+    modifier staffExists(uint256 _staffId) {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        require(staffs[_staffId].isActive, "Staff is not active");
+        _;
+    }
+
     function registerStudent(
         string memory _name,
         uint256 _level
-    ) public payable validLevel(_level) {
+    )
+        public
+        validLevel(_level)
+    {
         uint256 requiredFee = levelFees[_level];
-        require(msg.value >= requiredFee, "Insufficient fee payment");
+        require(
+            schoolToken.allowance(msg.sender, address(this)) >= requiredFee,
+            "Approve tokens first"
+        );
+ 
+        bool success = schoolToken.transferFrom(
+            msg.sender,
+            address(this),
+            requiredFee
+        );
+        require(success, "Token transfer failed");
 
         studentCount++;
 
@@ -102,12 +141,13 @@ contract SchoolSys {
             level: _level,
             walletAddress: msg.sender,
             feePaid: true,
-            amountPaid: msg.value,
-            paymentTimestamp: block.timestamp
+            amountPaid: requiredFee,
+            paymentTimestamp: block.timestamp,
+            isRemoved: false 
         });
 
         emit StudentRegistered(studentCount, _name, _level, true);
-        emit FeePaid(studentCount, msg.value, block.timestamp);
+        emit TokenFeesPaid(studentCount, requiredFee, block.timestamp);
     }
 
     function registerStaff(
