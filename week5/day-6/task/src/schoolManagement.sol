@@ -22,7 +22,7 @@ contract mySchool {
         levelPrice[300] = 300;
         levelPrice[400] = 400;
 
-        token.mint(address(this), 1_000_000 * 10 ** 18);
+        // token.mint(address(this), 1_000_000 * 10 ** 18);
 
         userRoles[admin] = Roles.admin;
     }
@@ -113,7 +113,7 @@ contract mySchool {
     function claimFaucet(address _to) public {
         require(_to != address(0), "Not valid address");
         require(!hasClaimed[_to], "Already claimed tokens");
-        token.mint(_to, faucetAmount);
+        // token.mint(_to, faucetAmount);
         hasClaimed[_to] = true;
         amountClaimed[_to] = faucetAmount;
         emit GenericEvent("Faucet claimed");
