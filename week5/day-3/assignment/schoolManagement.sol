@@ -109,4 +109,35 @@ contract SchoolSys {
 
         emit StaffRegistered(staffCount, _name, _role);
     }
+
+    function payStaff(uint256 _staffId) public payable onlyOwner {
+        Staff storage staff = staffs[_staffId];
+
+        require(staff.id != 0, "Staff does not exist");
+        require(msg.value >= staff.salary, "Insufficient salary amount");
+
+        (bool sent, ) = staff.walletAddress.call{value: msg.value}("");
+        require(sent, "Payment failed");
+
+        staff.salaryPaid = true;
+        staff.paymentTimestamp = block.timestamp;
+
+        emit SalaryPaid(_staffId, msg.value, block.timestamp);
+    }
+
+    function updateStudentPaymentStatus(uint256 _studentId) public payable {
+        Student storage student = students[_studentId];
+
+        require(student.id != 0, "Student does not exist");
+        require(!student.feePaid, "Fee already marked as paid");
+
+        uint256 requiredFee = levelFees[student.level];
+        require(msg.value >= requiredFee, "Insufficient payment");
+
+        student.feePaid = true;
+        student.amountPaid = msg.value;
+        student.paymentTimestamp = block.timestamp;
+
+        emit FeePaid(_studentId, msg.value, block.timestamp);
+    }
 }
