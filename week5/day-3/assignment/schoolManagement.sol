@@ -172,6 +172,54 @@ contract SchoolSys {
         emit StaffRegistered(staffCount, _name, _role);
     }
 
+    function employNewStaff(
+        string memory _name,
+        string memory _role,
+        address _walletAddress,
+        uint256 _salary
+    ) public onlyOwner {
+        staffCount++;
+
+        staffs[staffCount] = Staff({
+            id: staffCount,
+            name: _name,
+            role: _role,
+            walletAddress: _walletAddress,
+            salary: _salary,
+            salaryPaid: false,
+            paymentTimestamp: 0,
+            isActive: true,
+            isSuspended: false
+        });
+
+        emit StaffEmployed(staffCount, _name, _role);
+    }
+
+    function suspendStaff(uint256 _staffId)
+        public
+        onlyOwner
+    {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        require(staffs[_staffId].isActive, "Staff is not active");
+        require(!staffs[_staffId].isSuspended, "Staff already suspended");
+
+        staffs[_staffId].isSuspended = true;
+
+        emit StaffSuspended(_staffId, block.timestamp);
+    }
+
+    function unsuspendStaff(uint256 _staffId)
+        public
+        onlyOwner
+    {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        require(staffs[_staffId].isSuspended, "Staff is not suspended");
+
+        staffs[_staffId].isSuspended = false;
+
+        emit StaffUnsuspended(_staffId, block.timestamp);
+    }
+
     function payStaff(uint256 _staffId) public payable onlyOwner {
         Staff storage staff = staffs[_staffId];
 
