@@ -140,4 +140,35 @@ contract SchoolSys {
 
         emit FeePaid(_studentId, msg.value, block.timestamp);
     }
+
+
+
+
+    
+
+    function getStudent(uint256 _studentId) public view returns (Student memory) {
+        require(students[_studentId].id != 0, "Student does not exist");
+        return students[_studentId];
+    }
+
+    function getStaff(uint256 _staffId) public view returns (Staff memory) {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        return staffs[_staffId];
+    }
+
+    function getAllStudents() public view returns (Student[] memory) {
+        Student[] memory allStudents = new Student[](studentCount);
+        for (uint256 i = 1; i <= studentCount; i++) {
+            allStudents[i - 1] = students[i];
+        }
+        return allStudents;
+    }
+
+    function getAllStaffs() public view returns (Staff[] memory) {
+        Staff[] memory allStaffs = new Staff[](staffCount);
+        for (uint256 i = 1; i <= staffCount; i++) {
+            allStaffs[i - 1] = staffs[i];
+        }
+        return allStaffs;
+    }
 }
