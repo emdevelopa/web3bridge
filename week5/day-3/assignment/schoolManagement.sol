@@ -39,5 +39,4 @@ contract SchoolSystem{
 
     uint public studentCounter;
     uint public staffCounter;
-
 }
