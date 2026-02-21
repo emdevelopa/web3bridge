@@ -141,12 +141,21 @@ contract SchoolSys {
         emit FeePaid(_studentId, msg.value, block.timestamp);
     }
 
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
 
+        (bool sent, ) = owner.call{value: balance}("");
+        require(sent, "Withdrawal failed");
+    }
 
+    function getContractBalance() public view onlyOwner returns (uint256) {
+        return address(this).balance;
+    }
 
-    
-
-    function getStudent(uint256 _studentId) public view returns (Student memory) {
+    function getStudent(
+        uint256 _studentId
+    ) public view returns (Student memory) {
         require(students[_studentId].id != 0, "Student does not exist");
         return students[_studentId];
     }
