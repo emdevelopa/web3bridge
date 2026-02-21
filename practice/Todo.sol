@@ -16,10 +16,11 @@ contract Todo {
         uint timeCompleted;
     }
 
-    uint[] nums = [1,2,3,4,5,6,9,10];
 
     TodoFields[] Todos;
     uint8 todoId;
+
+    // uint[] nums = [1,2,3,4,5,6,9,10];
 
     // For testing Swap and Popu
     // function SwapItemAndPop() external returns(uint[] memory){
@@ -36,7 +37,6 @@ contract Todo {
         todoId = todoId + 1;
 
         /* need to create a struct first and then push  the struct to the array too store it in the blockchain state */
-
         TodoFields memory todo = TodoFields({
             id: todoId,
             title: _title,
@@ -52,6 +52,7 @@ contract Todo {
             if (Todos[i].id == _id) {
                 Todos[i].completed = true;
                 Todos[i].timeCompleted = block.timestamp;
+                break;
             }
         }
     }
@@ -60,14 +61,18 @@ contract Todo {
             if (Todos[i].id == _id) {
                 Todos[i].completed = false;
                 Todos[i].timeCompleted = 0;
+                break;
             }
         }
     }
 
-    function deleteTodo(uint _id) external view {
+    function deleteTodo(uint _id) external {
          for (uint i = 0; i < Todos.length; i++) {
             if (Todos[i].id == _id) {
-               
+               Todos[i] = Todos[Todos.length - 1];
+               Todos.pop();
+                break;
+
             }
         }
     }
@@ -81,6 +86,7 @@ contract Todo {
                 );
                 Todos[i].title = _title;
                 Todos[i].timeCompleted = 0;
+                break;
             }
         }
     }
