@@ -220,19 +220,33 @@ contract SchoolSys {
         emit StaffUnsuspended(_staffId, block.timestamp);
     }
 
-    function payStaff(uint256 _staffId) public payable onlyOwner {
+    function payStaff(uint256 _staffId)
+        public
+        onlyOwner
+    {
         Staff storage staff = staffs[_staffId];
 
         require(staff.id != 0, "Staff does not exist");
-        require(msg.value >= staff.salary, "Insufficient salary amount");
+        require(staff.isActive, "Staff is not active");
+        require(!staff.isSuspended, "Cannot pay a suspended staff");
 
-        (bool sent, ) = staff.walletAddress.call{value: msg.value}("");
-        require(sent, "Payment failed");
+        uint256 salaryAmount = staff.salary;
+
+      
+        require(
+            schoolToken.balanceOf(address(this)) >= salaryAmount,
+            "Contract has insufficient tokens"
+        );
+
+      
+        bool success = schoolToken.transfer(staff.walletAddress, salaryAmount);
+        require(success, "Salary payment failed");
 
         staff.salaryPaid = true;
         staff.paymentTimestamp = block.timestamp;
 
-        emit SalaryPaid(_staffId, msg.value, block.timestamp);
+        emit SalaryPaid(_staffId, salaryAmount, block.timestamp);
+        emit StaffPaidWithToken(_staffId, salaryAmount, block.timestamp);
     }
 
     function updateStudentPaymentStatus(uint256 _studentId)
@@ -295,10 +309,23 @@ contract SchoolSys {
         return staffs[_staffId];
     }
 
-    function getAllStudents() public view returns (Student[] memory) {
-        Student[] memory allStudents = new Student[](studentCount);
+   function getAllStudents() public view returns (Student[] memory) {
+        // First count active students
+        uint256 activeCount = 0;
         for (uint256 i = 1; i <= studentCount; i++) {
-            allStudents[i - 1] = students[i];
+            if (!students[i].isRemoved) {
+                activeCount++;
+            }
+        }
+
+        // Build array of only active students
+        Student[] memory allStudents = new Student[](activeCount);
+        uint256 index = 0;
+        for (uint256 i = 1; i <= studentCount; i++) {
+            if (!students[i].isRemoved) {
+                allStudents[index] = students[i];
+                index++;
+            }
         }
         return allStudents;
     }
