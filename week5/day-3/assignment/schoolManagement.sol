@@ -165,7 +165,8 @@ contract SchoolSys {
             walletAddress: _walletAddress,
             salary: _salary,
             salaryPaid: false,
-            paymentTimestamp: 0
+            paymentTimestamp: 0,isActive: true,      
+            isSuspended: false 
         });
 
         emit StaffRegistered(staffCount, _name, _role);
@@ -186,20 +187,40 @@ contract SchoolSys {
         emit SalaryPaid(_staffId, msg.value, block.timestamp);
     }
 
-    function updateStudentPaymentStatus(uint256 _studentId) public payable {
+    function updateStudentPaymentStatus(uint256 _studentId)
+        public
+        studentExists(_studentId)
+    {
         Student storage student = students[_studentId];
 
-        require(student.id != 0, "Student does not exist");
-        require(!student.feePaid, "Fee already marked as paid");
+        require(!student.feePaid, "Fee already paid");
 
         uint256 requiredFee = levelFees[student.level];
-        require(msg.value >= requiredFee, "Insufficient payment");
+
+        require(
+            schoolToken.allowance(msg.sender, address(this)) >= requiredFee,
+            "Approve tokens first"
+        );
+
+        bool success = schoolToken.transferFrom(msg.sender, address(this), requiredFee);
+        require(success, "Token transfer failed");
 
         student.feePaid = true;
-        student.amountPaid = msg.value;
+        student.amountPaid = requiredFee;
         student.paymentTimestamp = block.timestamp;
 
-        emit FeePaid(_studentId, msg.value, block.timestamp);
+        emit FeePaid(_studentId, requiredFee, block.timestamp);
+        emit TokenFeesPaid(_studentId, requiredFee, block.timestamp);
+    }
+
+    function removeStudent(uint256 _studentId)
+        public
+        onlyOwner
+        studentExists(_studentId)
+    {
+        students[_studentId].isRemoved = true;
+
+        emit StudentRemoved(_studentId, block.timestamp);
     }
 
     function withdraw() public onlyOwner {
