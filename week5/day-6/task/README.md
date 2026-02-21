@@ -1,0 +1,9 @@
+erc20 cotract Address: 0x9d664Cf01365ff5eD0581Ad3F1abd97553CE7F54
+
+Todo contract Address: 0x02D5Fb175A5E8fbE96c0A73f62085c6029339C63
+
+SaveEther contract Address: 0xE64650BB48eCae606E625CC15C4aea4288925d43
+
+SaveAsset contract Address: 0xa0e4D8C17010a213174FC6e67ecAd85B22Ff3f7e
+
+SchoolManagement contract Address: 0x559d247F39305392d02d70ab6d71f5377fa790DC
