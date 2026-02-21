@@ -5,48 +5,24 @@ import "./IERC20.sol";
 
 contract mySchool {
     IERC20 public token;
-    address public admin;
+    address public schoolAdmin;
 
-    uint public staffId;
-    uint public studentId;
-    uint256 public faucetAmount = 1000 * 10 ** 18;
-    uint256 constant PAY_INTERVAL = 30 days;
+    uint public nextStaffId;
+    uint public nextStudentId;
+    uint256 public faucetTokens = 1000 * 10 ** 18;
+    uint256 constant SALARY_INTERVAL = 30 days;
 
-    constructor(address _token) {
-        admin = msg.sender;
-        token = IERC20(_token);
+    enum Role { Admin, Staff, Student }
+    enum PaymentStatus { Unpaid, Paid }
 
-        // Sample level prices
-        levelPrice[100] = 100;
-        levelPrice[200] = 200;
-        levelPrice[300] = 300;
-        levelPrice[400] = 400;
-
-        // token.mint(address(this), 1_000_000 * 10 ** 18);
-
-        userRoles[admin] = Roles.admin;
-    }
-
-    // EVENTS
-    event StudentEvent(string message, uint studentId);
-    event StudentClaimEvent(uint studentId, uint amountPaid, address wallet);
-    event StaffEvent(uint staffId, address wallet);
-    event StaffPaymentEvent(address staffWallet, uint amountPaid);
-    event GenericEvent(string message);
-
-    // ENUMS
-    enum Roles { admin, staff, student }
-    enum Status { unpaid, paid }
-
-    // STRUCTS
     struct Staff {
         uint id;
-        string name;
+        string fullName;
         address wallet;
-        uint salary;
-        bool paid;
-        uint paidAt;
-        Roles role;
+        uint monthlySalary;
+        bool hasBeenPaid;
+        uint lastPaidAt;
+        Role role;
         bool claimed;
         uint claimedAt;
         bool suspended;
@@ -54,237 +30,225 @@ contract mySchool {
 
     struct Student {
         uint id;
-        string name;
+        string fullName;
         address wallet;
         uint level;
         uint8 age;
-        uint amountPaid;
-        Status paymentStatus;
-        Roles role;
+        uint feesPaid;
+        PaymentStatus paymentStatus;
+        Role role;
         bool claimed;
         uint claimedAt;
     }
 
-    // MAPPINGS
-    mapping(address => Roles) public userRoles;
-    mapping(uint => uint256) public levelPrice;
-    mapping(address => bool) public hasClaimed;
-    mapping(address => uint256) public amountClaimed;
-    mapping(address => Student) public studentDetails;
-    mapping(address => Staff) public staffDetails;
-    mapping(address => uint256) public lastPaid;
+    mapping(address => Role) public roles;
+    mapping(uint => uint256) public levelFees;
+    mapping(address => bool) public faucetClaimed;
+    mapping(address => uint256) public totalClaimed;
+    mapping(address => Student) public students;
+    mapping(address => Staff) public staffMembers;
+    mapping(address => uint256) public lastSalaryPaid;
 
-    Staff[] public staffList;
-    Student[] public studentList;
+    Student[] public studentRegistry;
+    Staff[] public staffRegistry;
 
-    // MODIFIERS
+    event StudentAdded(string message, uint studentId);
+    event StudentFeesPaid(uint studentId, uint amount, address wallet);
+    event StaffAdded(uint staffId, address wallet);
+    event StaffPaid(address wallet, uint amount);
+    event GenericLog(string message);
+
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can call this");
+        require(msg.sender == schoolAdmin, "Not admin");
         _;
     }
 
     modifier onlyStudent() {
-        require(userRoles[msg.sender] == Roles.student, "Only student");
+        require(roles[msg.sender] == Role.Student, "Not student");
         _;
     }
 
     modifier onlyStaff() {
-        require(userRoles[msg.sender] == Roles.staff, "Only staff");
+        require(roles[msg.sender] == Role.Staff, "Not staff");
         _;
     }
 
-    modifier canPayStaff(address _staff_wallet) {
-        require(
-            staffDetails[_staff_wallet].role == Roles.staff,
-            "Only staff can receive salary"
-        );
-        require(!staffDetails[_staff_wallet].suspended, "Staff is suspended");
-        uint timeSinceLastPayment = block.timestamp - lastPaid[_staff_wallet];
-        require(timeSinceLastPayment >= PAY_INTERVAL, "Must wait 30 days between payments");
+    modifier canReceiveSalary(address _staffWallet) {
+        require(staffMembers[_staffWallet].role == Role.Staff, "Invalid staff");
+        require(!staffMembers[_staffWallet].suspended, "Staff suspended");
+        uint timeSinceLast = block.timestamp - lastSalaryPaid[_staffWallet];
+        require(timeSinceLast >= SALARY_INTERVAL, "Salary interval not reached");
         _;
     }
 
-    // HELPERS
-    function etherToWei(uint _amount) internal pure returns (uint256) {
-        return _amount * 10 ** 18;
+    constructor(address _token) {
+        schoolAdmin = msg.sender;
+        token = IERC20(_token);
+
+        levelFees[100] = 100;
+        levelFees[200] = 200;
+        levelFees[300] = 300;
+        levelFees[400] = 400;
+
+        roles[schoolAdmin] = Role.Admin;
     }
 
-    // FAUCET
-    function claimFaucet(address _to) public {
-        require(_to != address(0), "Not valid address");
-        require(!hasClaimed[_to], "Already claimed tokens");
-        // token.mint(_to, faucetAmount);
-        hasClaimed[_to] = true;
-        amountClaimed[_to] = faucetAmount;
-        emit GenericEvent("Faucet claimed");
+    function claimFaucet(address _receiver) public {
+        require(_receiver != address(0), "Invalid address");
+        require(!faucetClaimed[_receiver], "Already claimed");
+        faucetClaimed[_receiver] = true;
+        totalClaimed[_receiver] = faucetTokens;
+        emit GenericLog("Faucet tokens claimed");
     }
 
-    // STUDENT FUNCTIONS
-    function addStudent(string memory _name, uint _level, uint8 _age) public onlyAdmin {
-        require(_level > 0 && levelPrice[_level] > 0, "Invalid Level");
-
-        Student memory newStudent = Student({
-            id: studentList.length,
-            name: _name,
+    function registerStudent(string memory _name, uint _level, uint8 _age) public onlyAdmin {
+        require(_level > 0 && levelFees[_level] > 0, "Invalid level");
+        Student memory s = Student({
+            id: studentRegistry.length,
+            fullName: _name,
             wallet: address(0),
             level: _level,
             age: _age,
-            amountPaid: 0,
-            paymentStatus: Status.unpaid,
-            role: Roles.student,
+            feesPaid: 0,
+            paymentStatus: PaymentStatus.Unpaid,
+            role: Role.Student,
             claimed: false,
             claimedAt: 0
         });
-
-        studentList.push(newStudent);
-        emit StudentEvent("Student added successfully", studentId++);
+        studentRegistry.push(s);
+        emit StudentAdded("Student registered", nextStudentId++);
     }
 
-    function claimStudentId(uint _Id) external {
-        require(_Id < studentList.length, "Student not found");
-        require(msg.sender != admin, "Admin can't claim");
-        require(hasClaimed[msg.sender], "Claim faucet first");
+    function payStudentFees(uint _studentIndex) external {
+        require(_studentIndex < studentRegistry.length, "Student not found");
+        require(msg.sender != schoolAdmin, "Admin cannot claim fees");
+        require(faucetClaimed[msg.sender], "Claim faucet first");
 
-        Student storage student = studentList[_Id];
-        require(student.role == Roles.student, "Not a student");
-        require(!student.claimed, "Already claimed");
+        Student storage s = studentRegistry[_studentIndex];
+        require(!s.claimed, "Already claimed");
 
-        uint fee = etherToWei(levelPrice[student.level]);
-        require(token.balanceOf(msg.sender) >= fee, "Insufficient balance");
+        uint fee = s.level * 10 ** 18;
+        require(token.balanceOf(msg.sender) >= fee, "Insufficient tokens");
 
-        student.amountPaid = fee;
-        student.claimed = true;
-        student.claimedAt = block.timestamp;
-        student.paymentStatus = Status.paid;
-        student.wallet = msg.sender;
+        s.feesPaid = fee;
+        s.claimed = true;
+        s.claimedAt = block.timestamp;
+        s.paymentStatus = PaymentStatus.Paid;
+        s.wallet = msg.sender;
 
-        studentDetails[msg.sender] = student;
-        userRoles[msg.sender] = Roles.student;
+        students[msg.sender] = s;
+        roles[msg.sender] = Role.Student;
 
-        require(token.transferFrom(msg.sender, address(this), fee), "Payment failed");
-
-        emit StudentClaimEvent(_Id, fee, msg.sender);
+        require(token.transferFrom(msg.sender, address(this), fee), "Token transfer failed");
+        emit StudentFeesPaid(_studentIndex, fee, msg.sender);
     }
 
-    function removeStudent(uint _studentId) external onlyAdmin {
-        require(_studentId < studentList.length, "Student not found");
-        Student storage student = studentList[_studentId];
+    function removeStudent(uint _index) external onlyAdmin {
+        require(_index < studentRegistry.length, "Student not found");
+        Student storage s = studentRegistry[_index];
 
-        delete studentDetails[student.wallet];
-        userRoles[student.wallet] = Roles.admin;
+        delete students[s.wallet];
+        roles[s.wallet] = Role.Admin;
 
-        // Remove from array
-        studentList[_studentId] = studentList[studentList.length - 1];
-        studentList.pop();
-
-        emit StudentEvent("Student removed", _studentId);
+        studentRegistry[_index] = studentRegistry[studentRegistry.length - 1];
+        studentRegistry.pop();
+        emit StudentAdded("Student removed", _index);
     }
 
-    // STAFF FUNCTIONS
-    function addStaff(string memory _name, uint _salary) public onlyAdmin {
-        uint salary = etherToWei(_salary);
-        Staff memory newStaff = Staff({
-            id: staffList.length,
-            name: _name,
+    function registerStaff(string memory _name, uint _salary) public onlyAdmin {
+        Staff memory s = Staff({
+            id: staffRegistry.length,
+            fullName: _name,
             wallet: address(0),
-            salary: salary,
-            paid: false,
-            paidAt: 0,
-            role: Roles.staff,
+            monthlySalary: _salary * 10 ** 18,
+            hasBeenPaid: false,
+            lastPaidAt: 0,
+            role: Role.Staff,
             claimed: false,
             claimedAt: 0,
             suspended: false
         });
-        staffList.push(newStaff);
-        emit StaffEvent(newStaff.id, newStaff.wallet);
+        staffRegistry.push(s);
+        emit StaffAdded(s.id, s.wallet);
     }
 
-    function employStaff(string memory _name, address _wallet, uint _salary) external onlyAdmin {
-        uint salary = etherToWei(_salary);
-        Staff memory newStaff = Staff({
-            id: staffList.length,
-            name: _name,
+    function employStaff(address _wallet, string memory _name, uint _salary) external onlyAdmin {
+        Staff memory s = Staff({
+            id: staffRegistry.length,
+            fullName: _name,
             wallet: _wallet,
-            salary: salary,
-            paid: false,
-            paidAt: 0,
-            role: Roles.staff,
+            monthlySalary: _salary * 10 ** 18,
+            hasBeenPaid: false,
+            lastPaidAt: 0,
+            role: Role.Staff,
             claimed: true,
             claimedAt: block.timestamp,
             suspended: false
         });
-        staffList.push(newStaff);
-        staffDetails[_wallet] = newStaff;
-        userRoles[_wallet] = Roles.staff;
-
-        emit StaffEvent(newStaff.id, _wallet);
+        staffRegistry.push(s);
+        staffMembers[_wallet] = s;
+        roles[_wallet] = Role.Staff;
+        emit StaffAdded(s.id, _wallet);
     }
 
-    function claimStaffId(uint _Id) external {
-        require(_Id < staffList.length, "Staff not found");
-        require(msg.sender != admin, "Admin can't claim");
+    function claimStaff(uint _index) external {
+        require(_index < staffRegistry.length, "Staff not found");
+        Staff storage s = staffRegistry[_index];
+        require(!s.claimed, "Already claimed");
+        require(msg.sender != schoolAdmin, "Admin cannot claim");
 
-        Staff storage unClaimedStaff = staffList[_Id];
-        require(!unClaimedStaff.claimed, "Already claimed");
+        s.wallet = msg.sender;
+        s.claimed = true;
+        s.claimedAt = block.timestamp;
 
-        unClaimedStaff.wallet = msg.sender;
-        unClaimedStaff.claimed = true;
-        unClaimedStaff.claimedAt = block.timestamp;
-
-        staffDetails[msg.sender] = unClaimedStaff;
-        userRoles[msg.sender] = Roles.staff;
-
-        emit StaffEvent(_Id, msg.sender);
+        staffMembers[msg.sender] = s;
+        roles[msg.sender] = Role.Staff;
+        emit StaffAdded(_index, msg.sender);
     }
 
-    function suspendStaff(uint _staffId) external onlyAdmin {
-        require(_staffId < staffList.length, "Staff not found");
-        Staff storage staff = staffList[_staffId];
-        staff.suspended = true;
-
-        emit StaffEvent(_staffId, staff.wallet);
+    function suspendStaff(uint _index) external onlyAdmin {
+        require(_index < staffRegistry.length, "Staff not found");
+        staffRegistry[_index].suspended = true;
+        emit StaffAdded(_index, staffRegistry[_index].wallet);
     }
 
-    function reinstateStaff(uint _staffId) external onlyAdmin {
-        require(_staffId < staffList.length, "Staff not found");
-        Staff storage staff = staffList[_staffId];
-        staff.suspended = false;
-
-        emit StaffEvent(_staffId, staff.wallet);
+    function reinstateStaff(uint _index) external onlyAdmin {
+        require(_index < staffRegistry.length, "Staff not found");
+        staffRegistry[_index].suspended = false;
+        emit StaffAdded(_index, staffRegistry[_index].wallet);
     }
 
-    function payStaff(address _wallet) external onlyAdmin canPayStaff(_wallet) {
-        Staff storage _staff = staffDetails[_wallet];
-        require(_staff.wallet != address(0), "Not staff/Unclaimed profile");
-        require(_staff.salary > 0, "Salary can't be 0");
-        require(token.balanceOf(address(this)) >= _staff.salary, "Insufficient funds");
+    function payStaffSalary(address _wallet) external onlyAdmin canReceiveSalary(_wallet) {
+        Staff storage s = staffMembers[_wallet];
+        require(s.wallet != address(0), "Invalid staff");
+        require(s.monthlySalary > 0, "Salary is zero");
+        require(token.balanceOf(address(this)) >= s.monthlySalary, "Insufficient funds");
 
-        lastPaid[_wallet] = block.timestamp;
-        _staff.paid = true;
-        _staff.paidAt = block.timestamp;
+        lastSalaryPaid[_wallet] = block.timestamp;
+        s.hasBeenPaid = true;
+        s.lastPaidAt = block.timestamp;
 
-        require(token.transfer(_wallet, _staff.salary), "Transfer failed");
-        emit StaffPaymentEvent(_wallet, _staff.salary);
+        require(token.transfer(_wallet, s.monthlySalary), "Transfer failed");
+        emit StaffPaid(_wallet, s.monthlySalary);
     }
 
-    // VIEW FUNCTIONS
-    function getStudent(address _wallet) public view returns (Student memory) {
-        return studentDetails[_wallet];
+    function getStudentDetails(address _wallet) public view returns (Student memory) {
+        return students[_wallet];
     }
 
-    function getStaff(address _wallet) public view returns (Staff memory) {
-        return staffDetails[_wallet];
+    function getStaffDetails(address _wallet) public view returns (Staff memory) {
+        return staffMembers[_wallet];
     }
 
-    function getAllStaffDetails() public view returns (Staff[] memory) {
-        return staffList;
+    function allStudents() public view returns (Student[] memory) {
+        return studentRegistry;
     }
 
-    function getAllStudentDetails() public view returns (Student[] memory) {
-        return studentList;
+    function allStaff() public view returns (Staff[] memory) {
+        return staffRegistry;
     }
 
-    function getContractBalance() public view returns (uint) {
+    function contractBalance() public view returns (uint) {
         return token.balanceOf(address(this));
     }
 }
