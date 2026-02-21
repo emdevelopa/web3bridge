@@ -17,6 +17,7 @@ contract SchoolSys {
         bool feePaid;
         uint256 amountPaid;
         uint256 paymentTimestamp;
+        bool isRemoved;
     }
     struct Staff {
         uint256 id;
@@ -26,6 +27,8 @@ contract SchoolSys {
         uint256 salary;
         bool salaryPaid;
         uint256 paymentTimestamp;
+        bool isActive;      
+        bool isSuspended; 
     }
 
     mapping(uint256 => uint256) public levelFees;
@@ -33,14 +36,18 @@ contract SchoolSys {
     uint256 public studentCount;
     uint256 public staffCount;
 
+    IERC20 public schoolToken;
+
     mapping(uint256 => Student) public students;
     mapping(uint256 => Staff) public staffs;
 
     // Owner
     address public owner;
 
-    constructor() {
+    constructor(address _tokenAddress) {
         owner = msg.sender;
+
+        schoolToken = IERC20(_tokenAddress);
 
         levelFees[100] = 0.5 ether;
         levelFees[200] = 1 ether;
@@ -58,6 +65,13 @@ contract SchoolSys {
     event StaffRegistered(uint256 id, string name, string role);
     event FeePaid(uint256 studentId, uint256 amount, uint256 timestamp);
     event SalaryPaid(uint256 staffId, uint256 amount, uint256 timestamp);
+
+    event StudentRemoved(uint256 studentId, uint256 timestamp);
+    event StaffSuspended(uint256 staffId, uint256 timestamp);
+    event StaffUnsuspended(uint256 staffId, uint256 timestamp);
+    event StaffEmployed(uint256 staffId, string name, string role);
+    event TokenFeesPaid(uint256 studentId, uint256 amount, uint256 timestamp);
+    event StaffPaidWithToken(uint256 staffId, uint256 amount, uint256 timestamp);
 
     // Modifiers
     modifier onlyOwner() {
