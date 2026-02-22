@@ -23,8 +23,10 @@ contract ER20 {
     
 
     mapping(address => uint) balances;
+    mapping(address => mapping(address => uint)) allowances;
 
     event Transfer(address indexed from, address indexed to, uint value);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     function name() external pure returns (string memory) {
         return TokenName;
@@ -62,5 +64,28 @@ contract ER20 {
 
         emit Transfer(address(0), _to, _amount); 
 
+    }
+
+    function transferFrom(address _from, address _to, uint _amount)external returns(bool){
+        require(balances[_from] >= _amount, "Insufficient balance");
+        require(allowances[_from][msg.sender] >= _amount,"amount can not be less than allowance balance");
+
+        balances[_from] = balances[_from] - _amount;
+        balances[_to] = balances[_to] + _amount;
+        allowances[_from][msg.sender] = allowances[_from][msg.sender] - _amount;  
+
+        emit Transfer(_from, _to, _amount);
+
+
+        return true;
+    }
+
+    function Approve(address _spender, uint _amount) external returns(bool){
+        require(balances[msg.sender] => _amount, "balance is low");
+        allowances[msg.sender][_spender] = _amount;
+
+        emit Approval(msg.sender, _spender, _amount);
+
+        return true;
     }
 }
