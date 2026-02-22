@@ -42,15 +42,25 @@ contract SaveEther {
         return balance[msg.sender];
     }
 
+
+    function getContractBalanceEther() external view returns(uint){
+        return address(this).balance;
+    }
+
+
+
+
+
     // ERC20
 
     function depositToken(address token_address, uint amount) external {
 
         require(IERC20(token_address).balanceOf(msg.sender) >= amount, "insufficient token balance");
 
+        balanceERC20[msg.sender][token_address] = balanceERC20[msg.sender][token_address] + amount;
+
         require(IERC20(token_address).transferFrom(msg.sender, address(this), amount), "transfer of token failed");
 
-        balanceERC20[msg.sender][token_address] = balanceERC20[msg.sender][token_address] + amount;
 
         emit Deposit(address(this), msg.sender, amount);
         
@@ -59,7 +69,7 @@ contract SaveEther {
     function withdrawERC20(address token_address,uint _amount) external {
         require(balanceERC20[msg.sender][token_address] >= _amount, "withdrawal failed: insufficient token balance");
 
-
+        balanceERC20[msg.sender][token_address] = balanceERC20[msg.sender][token_address] - _amount;
 
         require(IERC20(token_address).transfer(msg.sender, _amount), "Withdrawal failed");
 
@@ -72,9 +82,6 @@ contract SaveEther {
         return balanceERC20[msg.sender][token_address];
     }
 
-    function getContractBalanceEther() external view returns(uint){
-        return address(this).balance;
-    }
 
     function getContractBalanceER20(address token_address) external view returns(uint){
         return balanceERC20[msg.sender][token_address];
