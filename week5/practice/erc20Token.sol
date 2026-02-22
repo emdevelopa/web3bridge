@@ -88,4 +88,8 @@ contract ER20 {
 
         return true;
     }
+
+    function allowance(address _owner, address _spender) external view returns(uint remaining){
+        return allowances[_owner][_spender];
+    }
 }
