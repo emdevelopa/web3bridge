@@ -39,7 +39,7 @@ contract SaveEther {
 
 
     function getContractBalance() external view returns(uint){
-        return balance[address(this)];
+        return address(this).balance;
     }
     receive() external payable {}
     fallback() external {}
