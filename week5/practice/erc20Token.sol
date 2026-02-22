@@ -81,7 +81,7 @@ contract ER20 {
     }
 
     function Approve(address _spender, uint _amount) external returns(bool){
-        require(balances[msg.sender] => _amount, "balance is low");
+        require(balances[msg.sender] >= _amount, "balance is low");
         allowances[msg.sender][_spender] = _amount;
 
         emit Approval(msg.sender, _spender, _amount);
