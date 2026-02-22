@@ -2,18 +2,18 @@
 pragma solidity ^0.8.20;
 
 interface IERC20{
-    function name() external view returns (string);
-    function symbol() external view returns (string);
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
     function decimals() external view returns (uint8);
     function totalSupply() external view returns (uint256);
     function balanceOf(address _owner) external view returns (uint256 balance);
     function transfer(address _to, uint256 _value) external returns (bool success);
     function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
     function approve(address _spender, uint256 _value) external returns (bool success);
-    function allowance(address _owner, address _spender) external view returns (uint256 remaining)
+    function allowance(address _owner, address _spender) external view returns (uint256 remaining);
 
-    event Transfer(address indexed _from, address indexed _to, uint256 _value)
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value)
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
 
 }
@@ -31,11 +31,11 @@ contract ERC20{
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    function name() external view returns (string){
+    function name() external view returns (string memory){
         return TOKEN_NAME;
     }
 
-    function symbol() external view returns (string){
+    function symbol() external view returns (string memory){
         return TOKEN_SYMBOL;
     }
 
@@ -63,13 +63,13 @@ contract ERC20{
         balances[msg.sender] = balances[msg.sender] - _value; 
         balances[_to] = balances[_to] + _value; 
 
-        return true
+        return true;
     }
 
      function approve(address _spender, uint256 _value) external returns (bool success){
         require(balances[msg.sender] >= _value, "Insufficient Balance");
 
-        allowances[msg.sender][_sender] = _value;
+        allowances[msg.sender][_spender] = _value;
 
         emit Approval(msg.sender, _spender, _value);
 
@@ -77,7 +77,7 @@ contract ERC20{
      }
 
     function transferFrom(address _from, address _to, uint256 _value) external returns (bool success){
-        require(balance[_from] >= _value, "Insufficient Balance From owner");
+        require(balances[_from] >= _value, "Insufficient Balance From owner");
         require(allowances[_from][msg.sender] >= _value, "amount entered is not allowed to be spent");
 
         balances[_from] = balances[_from] - _value;

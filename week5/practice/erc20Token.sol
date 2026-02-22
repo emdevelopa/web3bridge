@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-contract ER20{
+contract ER20 {
     // name
     // symbol
     // decimal
@@ -14,26 +14,53 @@ contract ER20{
 
     // Approve Event
     // Transfer Event
+
     string constant TokenName = "Teni";
     string constant TokenSymbol = "TE";
     uint8 constant TokenDecimal = 18;
-    uint256 constant TotalSupply = 2*10**18;
+    uint256  TotalSupply;
 
-    function name() external view returns(string memory){
+    
+
+    mapping(address => uint) balances;
+
+    event Transfer(address indexed from, address indexed to, uint value);
+
+    function name() external pure returns (string memory) {
         return TokenName;
     }
 
-    function symbol() external view returns(string memory){
+    function symbol() external pure returns (string memory) {
         return TokenSymbol;
     }
 
-    function decimal() external view returns(uint8){
+    function decimal() external pure returns (uint8) {
         return TokenDecimal;
     }
 
-    function totallSupply() external view returns(uint){
+    function totalSupply() external view returns (uint) {
         return TotalSupply;
     }
 
-    // funct
+    function balanceOf(address _owner) external view returns (uint) {
+        return balances[_owner];
+    }
+
+    function transfer(address _to, uint _value) external returns (bool){
+        require(balances[msg.sender] >= _value, "Insufficient Funds");
+
+        balances[msg.sender] = balances[msg.sender] - _value; 
+        balances[_to] = balances[_to] + _value;
+
+        emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
+
+    function mint(address _to, uint _amount) external {
+        TotalSupply = TotalSupply + _amount;
+        balances[_to] = balances[_to] + _amount;
+
+        emit Transfer(address(0), _to, _amount); 
+
+    }
 }

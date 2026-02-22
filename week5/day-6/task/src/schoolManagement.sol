@@ -1,8 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract SchoolSys {
+interface IERC20 {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
+}
 
+contract SchoolSys {
     struct Student {
         uint256 id;
         string name;
@@ -11,6 +27,7 @@ contract SchoolSys {
         bool feePaid;
         uint256 amountPaid;
         uint256 paymentTimestamp;
+        bool isRemoved;
     }
     struct Staff {
         uint256 id;
@@ -20,19 +37,16 @@ contract SchoolSys {
         uint256 salary;
         bool salaryPaid;
         uint256 paymentTimestamp;
+        bool isActive;
+        bool isSuspended;
     }
 
     mapping(uint256 => uint256) public levelFees;
 
-    constructor() {
-        levelFees[100] = 0.5 ether;
-        levelFees[200] = 1 ether;
-        levelFees[300] = 1.5 ether;
-        levelFees[400] = 2 ether;
-    }
-
     uint256 public studentCount;
     uint256 public staffCount;
+
+    IERC20 public schoolToken;
 
     mapping(uint256 => Student) public students;
     mapping(uint256 => Staff) public staffs;
@@ -40,4 +54,287 @@ contract SchoolSys {
     // Owner
     address public owner;
 
+    constructor(address _tokenAddress) {
+        owner = msg.sender;
+
+        schoolToken = IERC20(_tokenAddress);
+
+        levelFees[100] = 0.5 ether;
+        levelFees[200] = 1 ether;
+        levelFees[300] = 1.5 ether;
+        levelFees[400] = 2 ether;
+    }
+
+    // Events
+    event StudentRegistered(
+        uint256 id,
+        string name,
+        uint256 level,
+        bool feePaid
+    );
+    event StaffRegistered(uint256 id, string name, string role);
+    event FeePaid(uint256 studentId, uint256 amount, uint256 timestamp);
+    event SalaryPaid(uint256 staffId, uint256 amount, uint256 timestamp);
+
+    event StudentRemoved(uint256 studentId, uint256 timestamp);
+    event StaffSuspended(uint256 staffId, uint256 timestamp);
+    event StaffUnsuspended(uint256 staffId, uint256 timestamp);
+    event StaffEmployed(uint256 staffId, string name, string role);
+    event TokenFeesPaid(uint256 studentId, uint256 amount, uint256 timestamp);
+    event StaffPaidWithToken(
+        uint256 staffId,
+        uint256 amount,
+        uint256 timestamp
+    );
+
+    // Modifiers
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this");
+        _;
+    }
+
+    modifier validLevel(uint256 _level) {
+        require(
+            _level == 100 || _level == 200 || _level == 300 || _level == 400,
+            "Invalid level. Must be 100, 200, 300 or 400"
+        );
+        _;
+    }
+
+    modifier studentExists(uint256 _studentId) {
+        require(students[_studentId].id != 0, "Student does not exist");
+        require(!students[_studentId].isRemoved, "Student has been removed");
+        _;
+    }
+
+    modifier staffExists(uint256 _staffId) {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        require(staffs[_staffId].isActive, "Staff is not active");
+        _;
+    }
+
+    function registerStudent(
+        string memory _name,
+        uint256 _level
+    )
+        public
+        validLevel(_level)
+    {
+        uint256 requiredFee = levelFees[_level];
+        require(
+            schoolToken.allowance(msg.sender, address(this)) >= requiredFee,
+            "Approve tokens first"
+        );
+ 
+        bool success = schoolToken.transferFrom(
+            msg.sender,
+            address(this),
+            requiredFee
+        );
+        require(success, "Token transfer failed");
+
+        studentCount++;
+
+        students[studentCount] = Student({
+            id: studentCount,
+            name: _name,
+            level: _level,
+            walletAddress: msg.sender,
+            feePaid: true,
+            amountPaid: requiredFee,
+            paymentTimestamp: block.timestamp,
+            isRemoved: false 
+        });
+
+        emit StudentRegistered(studentCount, _name, _level, true);
+        emit TokenFeesPaid(studentCount, requiredFee, block.timestamp);
+    }
+
+    function registerStaff(
+        string memory _name,
+        string memory _role,
+        address _walletAddress,
+        uint256 _salary
+    ) public onlyOwner {
+        staffCount++;
+
+        staffs[staffCount] = Staff({
+            id: staffCount,
+            name: _name,
+            role: _role,
+            walletAddress: _walletAddress,
+            salary: _salary,
+            salaryPaid: false,
+            paymentTimestamp: 0,isActive: true,      
+            isSuspended: false 
+        });
+
+        emit StaffRegistered(staffCount, _name, _role);
+    }
+
+    function employNewStaff(
+        string memory _name,
+        string memory _role,
+        address _walletAddress,
+        uint256 _salary
+    ) public onlyOwner {
+        staffCount++;
+
+        staffs[staffCount] = Staff({
+            id: staffCount,
+            name: _name,
+            role: _role,
+            walletAddress: _walletAddress,
+            salary: _salary,
+            salaryPaid: false,
+            paymentTimestamp: 0,
+            isActive: true,
+            isSuspended: false
+        });
+
+        emit StaffEmployed(staffCount, _name, _role);
+    }
+
+    function suspendStaff(uint256 _staffId)
+        public
+        onlyOwner
+    {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        require(staffs[_staffId].isActive, "Staff is not active");
+        require(!staffs[_staffId].isSuspended, "Staff already suspended");
+
+        staffs[_staffId].isSuspended = true;
+
+        emit StaffSuspended(_staffId, block.timestamp);
+    }
+
+    function unsuspendStaff(uint256 _staffId)
+        public
+        onlyOwner
+    {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        require(staffs[_staffId].isSuspended, "Staff is not suspended");
+
+        staffs[_staffId].isSuspended = false;
+
+        emit StaffUnsuspended(_staffId, block.timestamp);
+    }
+
+    function payStaff(uint256 _staffId)
+        public
+        onlyOwner
+    {
+        Staff storage staff = staffs[_staffId];
+
+        require(staff.id != 0, "Staff does not exist");
+        require(staff.isActive, "Staff is not active");
+        require(!staff.isSuspended, "Cannot pay a suspended staff");
+
+        uint256 salaryAmount = staff.salary;
+
+      
+        require(
+            schoolToken.balanceOf(address(this)) >= salaryAmount,
+            "Contract has insufficient tokens"
+        );
+
+      
+        bool success = schoolToken.transfer(staff.walletAddress, salaryAmount);
+        require(success, "Salary payment failed");
+
+        staff.salaryPaid = true;
+        staff.paymentTimestamp = block.timestamp;
+
+        emit SalaryPaid(_staffId, salaryAmount, block.timestamp);
+        emit StaffPaidWithToken(_staffId, salaryAmount, block.timestamp);
+    }
+
+    function updateStudentPaymentStatus(uint256 _studentId)
+        public
+        studentExists(_studentId)
+    {
+        Student storage student = students[_studentId];
+
+        require(!student.feePaid, "Fee already paid");
+
+        uint256 requiredFee = levelFees[student.level];
+
+        require(
+            schoolToken.allowance(msg.sender, address(this)) >= requiredFee,
+            "Approve tokens first"
+        );
+
+        bool success = schoolToken.transferFrom(msg.sender, address(this), requiredFee);
+        require(success, "Token transfer failed");
+
+        student.feePaid = true;
+        student.amountPaid = requiredFee;
+        student.paymentTimestamp = block.timestamp;
+
+        emit FeePaid(_studentId, requiredFee, block.timestamp);
+        emit TokenFeesPaid(_studentId, requiredFee, block.timestamp);
+    }
+
+    function removeStudent(uint256 _studentId)
+        public
+        onlyOwner
+        studentExists(_studentId)
+    {
+        students[_studentId].isRemoved = true;
+
+        emit StudentRemoved(_studentId, block.timestamp);
+    }
+
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+
+        (bool sent, ) = owner.call{value: balance}("");
+        require(sent, "Withdrawal failed");
+    }
+
+    function getContractBalance() public view onlyOwner returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getStudent(
+        uint256 _studentId
+    ) public view returns (Student memory) {
+        require(students[_studentId].id != 0, "Student does not exist");
+        return students[_studentId];
+    }
+
+    function getStaff(uint256 _staffId) public view returns (Staff memory) {
+        require(staffs[_staffId].id != 0, "Staff does not exist");
+        return staffs[_staffId];
+    }
+
+   function getAllStudents() public view returns (Student[] memory) {
+        // First count active students
+        uint256 activeCount = 0;
+        for (uint256 i = 1; i <= studentCount; i++) {
+            if (!students[i].isRemoved) {
+                activeCount++;
+            }
+        }
+
+        // Build array of only active students
+        Student[] memory allStudents = new Student[](activeCount);
+        uint256 index = 0;
+        for (uint256 i = 1; i <= studentCount; i++) {
+            if (!students[i].isRemoved) {
+                allStudents[index] = students[i];
+                index++;
+            }
+        }
+        return allStudents;
+    }
+
+    function getAllStaffs() public view returns (Staff[] memory) {
+        Staff[] memory allStaffs = new Staff[](staffCount);
+        for (uint256 i = 1; i <= staffCount; i++) {
+            allStaffs[i - 1] = staffs[i];
+        }
+        return allStaffs;
+    }
 }
