@@ -14,17 +14,30 @@ contract SchoolManagement {
         uint payment_time;
     }
 
+    struct Staff {
+        uint id;
+        string name;
+        address wallet_address;
+        string role;
+        uint salary;
+        uint last_payment_time;
+    }
+
     mapping(uint => Student) Students;
     mapping(uint => uint) level_fees;
 
-    event StudentRegistered(uint id,address indexed walletAddress,string name,uint level);
+    mapping(uint => Staff) Staffs;
+    // mapping(uint => uint) ;
+
+    event StudentRegistered(uint indexed id,address indexed walletAddress,string name,uint level);
+    event PaidFee(uint indexed id,address indexed walletAddress,uint value,uint time_payed);
 
     constructor(){
         owner = msg.sender;
         level_fees[100] = 1 ether;
-        level_fees[200] = 1.2 ether;
-        level_fees[300] = 1.3 ether;
-        level_fees[400] = 2 ether;
+        level_fees[200] = 1.5 ether;
+        level_fees[300] = 2 ether;
+        level_fees[400] = 2.5 ether;
     }
 
     modifier onlyAdmin(){
@@ -33,6 +46,7 @@ contract SchoolManagement {
     }
     
     uint studentCount;
+    uint staffCount;
 
     // Registering a Student
     function registerStudent(
@@ -58,7 +72,6 @@ contract SchoolManagement {
     }
 
     function StudentPayFee(uint _id)external payable{
-        require(msg.sender != owner, "Admin can not pay student fee");
         require(msg.sender == Students[_id].wallet_address, "Student not exist");
         require(!Students[_id].payment_status, "Student not exist");
 
@@ -67,6 +80,17 @@ contract SchoolManagement {
 
         require(msg.value == fee, "Incorrect fee amount");
 
+        emit PaidFee(_id, msg.sender, msg.value, block.timestamp);
+
+    }
+
+    function registerStaff(string memory _name, string memory role)external onlyAdmin(){
+        staffCount = staffCount + 1;
+        Staffs memory staff = Staff(staffCount, _name, ,role ,block.timestamp);
+    }
+
+    function getStaffById(uint _id) external view returns(Staff memory){
+        return Staffs[_id];
     }
 
     // Geting a Student by Id
