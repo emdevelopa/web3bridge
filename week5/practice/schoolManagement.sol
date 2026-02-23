@@ -29,10 +29,22 @@ contract SchoolManagement {
     mapping(uint => Staff) Staffs;
     // mapping(uint => uint) ;
 
-    event StudentRegistered(uint indexed id,address indexed walletAddress,string name,uint level);
-    event PaidFee(uint indexed id,address indexed walletAddress,uint value,uint time_payed);
+    event StudentRegistered(
+        uint indexed id,
+        address indexed walletAddress,
+        string name,
+        uint level
+    );
+    event PaidFee(
+        uint indexed id,
+        address indexed walletAddress,
+        uint value,
+        uint time_payed
+    );
 
-    constructor(){
+    event StaffRegistered(uint indexed _id, address indexed wallet_address, string _name, string role);
+
+    constructor() {
         owner = msg.sender;
         level_fees[100] = 1 ether;
         level_fees[200] = 1.5 ether;
@@ -40,19 +52,16 @@ contract SchoolManagement {
         level_fees[400] = 2.5 ether;
     }
 
-    modifier onlyAdmin(){
+    modifier onlyAdmin() {
         require(msg.sender == owner, "Not and Admin");
         _;
     }
-    
+
     uint studentCount;
     uint staffCount;
 
     // Registering a Student
-    function registerStudent(
-        string memory _name,
-        uint _level
-    ) external {
+    function registerStudent(string memory _name, uint _level) external {
         require(msg.sender == owner, "Admin can not register as student");
         studentCount = studentCount + 1;
 
@@ -71,8 +80,11 @@ contract SchoolManagement {
         emit StudentRegistered(studentCount, msg.sender, _name, _level);
     }
 
-    function StudentPayFee(uint _id)external payable{
-        require(msg.sender == Students[_id].wallet_address, "Student not exist");
+    function StudentPayFee(uint _id) external payable {
+        require(
+            msg.sender == Students[_id].wallet_address,
+            "Student not exist"
+        );
         require(!Students[_id].payment_status, "Student not exist");
 
         uint level = Students[_id].level;
@@ -80,16 +92,35 @@ contract SchoolManagement {
 
         require(msg.value == fee, "Incorrect fee amount");
 
+        Students[_id].payment_status = true;
+        Students[_id].payment_time = block.timestamp;
+
+
         emit PaidFee(_id, msg.sender, msg.value, block.timestamp);
-
     }
 
-    function registerStaff(string memory _name, string memory role)external onlyAdmin(){
+    function registerStaff(
+        string memory _name,
+        address _wallet_address,
+        string memory role,
+        uint _salary
+    ) external onlyAdmin {
         staffCount = staffCount + 1;
-        Staffs memory staff = Staff(staffCount, _name, ,role ,block.timestamp);
+        Staff memory staff = Staff(
+            staffCount,
+            _name,
+            _wallet_address,
+            role,
+            _salary,
+            block.timestamp
+        );
+
+        Staffs[staffCount] = staff;
+
+        emit StaffRegistered(staffCount, _wallet_address, _name, role);
     }
 
-    function getStaffById(uint _id) external view returns(Staff memory){
+    function getStaffById(uint _id) external view returns (Staff memory) {
         return Staffs[_id];
     }
 
@@ -97,6 +128,4 @@ contract SchoolManagement {
     function getStudentById(uint _id) external view returns (Student memory) {
         return Students[_id];
     }
-
-    
 }
