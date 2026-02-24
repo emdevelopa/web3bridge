@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { network } from "hardhat";
+ 
 
 const { ethers } = await network.connect();
 
@@ -7,15 +8,37 @@ describe("SaveEther", function () {
   async function deploy() {
     const [owner, user1, user2] = await ethers.getSigners();
 
+    // console.log(owner.address, user1.address, user2.address);
+    
+    
     const token = await ethers.deployContract("ER20");
     const saveEther = await ethers.deployContract("SaveEther");
-
+    
     const mintAmount = ethers.parseEther("1000");
     await token.mint(user1.address, mintAmount);
     await token.mint(user2.address, mintAmount);
-
+    
     return { saveEther, token, owner, user1, user2, mintAmount };
   }
+  describe("personal ERC20 Testing", function () {
+     it("should get symbol of the token", async function () {
+       const { erc20 } = await deployTodo();
+       const symbol = await erc20.symbol();
+
+       expect(symbol).to.equal("TE");
+
+       //  expect(todos.length).to.equal(0);
+     });
+
+     it("should get symbol of the name", async function () {
+       const { erc20 } = await deployTodo();
+       const symbol = await erc20.name();
+
+       expect(symbol).to.equal("Teni");
+
+       //  expect(todos.length).to.equal(0);
+     });
+  })
     
   describe("depositEther", function () {
     it("Should deposit ether and update user balance", async function () {
