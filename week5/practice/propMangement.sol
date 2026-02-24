@@ -83,7 +83,9 @@ contract propMangement {
         PropertyExist(_id)
         PropertyForSale(_id)
         ownerCanNotBuyThereProperty(_id)
-    {}
+    {
+              
+    }
 
     function getPropertyById(uint _id) external view returns (Property memory) {
         return Properties[_id];
