@@ -17,7 +17,6 @@ describe("ER", function () {
 
      expect(symbol).to.equal("TE")
 
-    //  expect(todos.length).to.equal(0);
    });
   
   it("should get symbol of the name", async function () {
@@ -25,8 +24,6 @@ describe("ER", function () {
     const symbol = await erc20.name();
 
     expect(symbol).to.equal("Teni");
-
-    //  expect(todos.length).to.equal(0);
   });
 });
 
