@@ -70,9 +70,10 @@ contract propMangement {
     ) external onlyOwner(_id) PropertyExist(_id) {
         // require(_id == Properties[_id].id, "Property does not exist");
 
-        delete Properties[_id];
+        // delete Properties[_id];
 
         // emit ProprtyDeleted()
+        
     }
 
     function BuyProperty(

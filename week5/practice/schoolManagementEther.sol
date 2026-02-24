@@ -27,7 +27,6 @@ contract SchoolManagement {
     mapping(uint => uint) level_fees;
 
     mapping(uint => Staff) Staffs;
-    // mapping(uint => uint) ;
 
     event StudentRegistered(
         uint indexed id,
@@ -42,7 +41,12 @@ contract SchoolManagement {
         uint time_payed
     );
 
-    event StaffRegistered(uint indexed _id, address indexed wallet_address, string _name, string role);
+    event StaffRegistered(
+        uint indexed _id,
+        address indexed wallet_address,
+        string _name,
+        string role
+    );
 
     constructor() {
         owner = msg.sender;
@@ -61,7 +65,10 @@ contract SchoolManagement {
     uint staffCount;
 
     // Registering a Student
-    function registerStudent(string memory _name, uint _level) external {
+    function registerStudent(
+        string memory _name,
+        uint _level
+    ) external onlyAdmin {
         require(msg.sender == owner, "Admin can not register as student");
         studentCount = studentCount + 1;
 
@@ -95,7 +102,6 @@ contract SchoolManagement {
         Students[_id].payment_status = true;
         Students[_id].payment_time = block.timestamp;
 
-
         emit PaidFee(_id, msg.sender, msg.value, block.timestamp);
     }
 
@@ -120,12 +126,45 @@ contract SchoolManagement {
         emit StaffRegistered(staffCount, _wallet_address, _name, role);
     }
 
+    function PayStaff(uint _id) external onlyAdmin {
+        require(_id == Staffs[_id].id, "Staff does not exist");
+
+        uint salary = Staffs[_id].salary;
+
+        require(
+            address(this).balance >= salary,
+            "Insufficient contract balance"
+        );
+
+        Staffs[_id].last_payment_time = block.timestamp;
+
+        (bool success, ) = payable(Staffs[_id].wallet_address).call{
+            value: salary
+        }("");
+        require(success, "Staff payment failed"); // Added require check
+    }
+
     function getStaffById(uint _id) external view returns (Staff memory) {
         return Staffs[_id];
+    }
+
+    // ✅ Key Change: Implemented getAllStaff
+    function getAllStaff() external view returns (Staff[] memory) {
+        Staff[] memory allStaff = new Staff[](staffCount); // memory array to hold all staff
+
+        for (uint i = 1; i <= staffCount; i++) {          // loop from 1 to staffCount
+            allStaff[i - 1] = Staffs[i];                 // fill the memory array
+        }
+
+        return allStaff;                                 // return the array
     }
 
     // Geting a Student by Id
     function getStudentById(uint _id) external view returns (Student memory) {
         return Students[_id];
+    }
+
+    function setLevelFee (uint _level, uint amount) external onlyAdmin{
+        level_fees[_level] = amount;
     }
 }
