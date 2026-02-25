@@ -18,6 +18,7 @@ describe("SaveEther", function () {
 
     return { saveEther, token, owner, user1, user2, mintAmount };
   }
+  
   describe("ERC20 Testing", function () {
     it("should get symbol of the token", async function () {
       const { token } = await deploy();
@@ -27,13 +28,15 @@ describe("SaveEther", function () {
 
     });
 
-    it("should get symbol of the name", async function () {
+    it("should get name of the token", async function () {
       const { token } = await deploy();
-      const symbol = await token.name();
+      const name = await token.name();
 
-      expect(symbol).to.equal("Teni");
+      expect(name).to.equal("Teni");
 
     });
+
+    it("should transfer token from one address to another")
   });
 
   describe("depositEther", function () {
