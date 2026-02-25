@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect, use } from "chai";
 import { network } from "hardhat";
 
 const { ethers } = await network.connect();
@@ -41,9 +41,13 @@ describe("ER20", function () {
 
   it("should transfer token from one account to another", async () => {
     const { erc20, owner, user1, mintAmount } = await deployToken();
-
-    
+    const trfAmount = 1n;
+    await erc20.connect(owner).transfer(user1.address, trfAmount);
+    expect(await erc20.balanceOf(user1.address)).to.equal(mintAmount+1n)
+    expect(await erc20.balanceOf(owner.address)).to.equal(mintAmount - 1n);
   })
+
+  it
 
 
 
