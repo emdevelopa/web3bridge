@@ -25,8 +25,6 @@ contract TodoTest is Test {
         todo.createTodo("laundry");
 
         assertEq(todo.getAllTodos()[0].title, "laundry");
-        
- 
     }
 
     // testGetAllTodo()
