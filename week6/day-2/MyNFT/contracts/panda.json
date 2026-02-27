@@ -1,0 +1,9 @@
+{
+    "name":"Kung Fu Panda",
+    "description": "he is the dragon warrior",
+    "image":"https://gateway.pinata.cloud/ipfs/bafkreielfeqighiql6mtblrdanpn4d5g4dwod4knvcetep7fsyzkyasawq",
+    "attributes":{
+        "strength": "8",
+        "specialty": "skoo doosh"
+    }
+}
