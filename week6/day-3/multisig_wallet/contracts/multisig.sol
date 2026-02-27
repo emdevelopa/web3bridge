@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 contract MultiSig {
-
     address[] public users;
 
     struct Transaction {
@@ -24,8 +23,6 @@ contract MultiSig {
         users.push(_user2);
         users.push(_user3);
     }
-
-    
 
     function CreateTransactions(uint _amount) external {
         id_count = id_count + 1;
@@ -64,7 +61,10 @@ contract MultiSig {
         for (uint i = 0; i < users.length; i++) {
             if (users[i] == msg.sender) transactions[_id].signer1 = true;
             for (uint i = 0; i < users.length; i++) {
-                if (users[i] == msg.sender) transactions[_id].signer2 = true;
+                if (users[i] == msg.sender) {
+                    transactions[_id].signer1 = false;
+                    transactions[_id].signed = false;
+                }
                 withdraw(
                     transactions[_id].user_caller,
                     transactions[_id].amount
@@ -80,7 +80,10 @@ contract MultiSig {
         );
 
         for (uint i = 0; i < users.length; i++) {
-            if (users[i] == msg.sender) transactions[_id].signer2 = true;
+            if (users[i] == msg.sender) {
+                transactions[_id].signer2 = false;
+                transactions[_id].signed = false;
+            }
             withdraw(transactions[_id].user_caller, transactions[_id].amount);
         }
     }
@@ -90,6 +93,6 @@ contract MultiSig {
         return success;
     }
 
-    receive() external payable{}
-    fallback() external{}
+    receive() external payable {}
+    fallback() external {}
 }
