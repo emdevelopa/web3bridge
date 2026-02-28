@@ -20,12 +20,33 @@ contract TodoTest is Test {
     }
 
     function testCreateTodo() public {
-
         vm.prank(user1);
+
         todo.createTodo("laundry");
 
         assertEq(todo.getAllTodos()[0].title, "laundry");
     }
+
+    function testMarkCompleted()public {
+        vm.prank(user1);
+        todo.createTodo("laundry");
+        vm.prank(user1);
+
+        todo.markCompleted(1);
+
+        assertEq(todo.getAllTodos()[0].completed, true);
+    }
+
+     function testDeleteTodo()public {
+        vm.prank(user1);
+        todo.createTodo("laundry");
+        vm.prank(user1);
+        todo.deleteTodo(1);
+        vm.prank(user1);
+
+        todo.markCompleted(1);
+    }
+    
 
     // testGetAllTodo()
 }
