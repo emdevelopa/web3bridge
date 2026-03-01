@@ -5,29 +5,31 @@ export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     profiles: {
-      default: {
-        version: "0.8.28",
-      },
+      default: { version: "0.8.28" },
       production: {
         version: "0.8.28",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
+        settings: { optimizer: { enabled: true, runs: 200 } },
       },
     },
   },
   networks: {
-   
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
+      gas: 60000000, // 👈 This sets the transaction gas limit cap
+      blockGasLimit: 60000000,
+      forking: {
+        url: "https://eth-mainnet.g.alchemy.com/v2/vd_C1hdVM-iMPPj3ctprN",
+      },
     },
+
     hardhatOp: {
       type: "edr-simulated",
-      chainType: "op",
+      chainType: "l1",
+      forking: {
+        url: "https://eth-mainnet.g.alchemy.com/v2/vd_C1hdVM-iMPPj3ctprN", // still forks mainnet state
+        // blockNumber: 24560536,
+      },
     },
     sepolia: {
       type: "http",
