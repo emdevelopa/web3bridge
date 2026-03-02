@@ -12,7 +12,11 @@ async function main() {
 
   await networkHelpers.impersonateAccount(HOLDER);
   const signer = await ethers.getSigner(HOLDER);
+
+  // getting the contract of the token
   const USDC = await ethers.getContractAt("IERC20", USDC_ADDR, signer);
+
+  // gettiing th econttract of the uniswapV2Router
   const ROUTER = await ethers.getContractAt(
     "IUniswapV2Router",
     ROUTER_ADDR,
@@ -20,7 +24,12 @@ async function main() {
   );
 
   const amountUSDC = ethers.parseUnits("1000", 6);
+  console.log("amount USDC",amountUSDC);
   const amountETH = ethers.parseEther("0.5");
+  console.log("amountETH", amountETH);
+  console.log("addrd", signer.address);
+  
+  
   const deadline = Math.floor(Date.now() / 1000) + 600;
 
   // console.log("===================");
