@@ -10,7 +10,7 @@ describe("Uniswap V2: addLiquidityETH", function () {
   const HOLDER = "0xf584f8728b874a6a5c7a8d4d387c9aae9172d621";
 
   async function deployFixture() {
-    // Connect using Hardhat 3 EDR Pattern
+ 
     const { ethers, networkHelpers } = await network.connect({
       network: "hardhatMainnet",
       chainType: "l1",
@@ -109,6 +109,6 @@ describe("Uniswap V2: addLiquidityETH", function () {
         deadline,
         { value: ethers.parseEther("0.1"), gasLimit: 800000 },
       ),
-    ).to.be.reverted; // Typically reverts with 'STF' (SafeTransferFrom)
+    ).revertedWith(""); // Typically reverts with 'STF' (SafeTransferFrom)
   });
 });

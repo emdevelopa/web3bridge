@@ -23,6 +23,11 @@ async function main() {
   const amountETH = ethers.parseEther("0.5");
   const deadline = Math.floor(Date.now() / 1000) + 600;
 
+  // console.log("===================");
+  // const beforeUSDCbal = await USDC.balanceOf(HOLDER);
+  // console.log(beforeUSDCbal);
+  
+
   await USDC.approve(ROUTER_ADDR, amountUSDC, { gasLimit: 100000 });
 
   console.log("Adding ETH Liquidity...");
