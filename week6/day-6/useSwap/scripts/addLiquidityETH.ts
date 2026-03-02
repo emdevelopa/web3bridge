@@ -37,6 +37,7 @@ async function main() {
   // console.log(beforeUSDCbal);
   
 
+
   await USDC.approve(ROUTER_ADDR, amountUSDC, { gasLimit: 100000 });
 
   console.log("Adding ETH Liquidity...");
@@ -52,4 +53,5 @@ async function main() {
   await tx.wait();
   console.log("Liquidity Added!");
 }
+
 main().catch(console.error);
