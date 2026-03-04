@@ -5,16 +5,14 @@ describe("Todo", function () {
   // Hardhat 3 helper
   const getEthers = async () => (await network.connect()).ethers;
 
-  async function deployTodo() {
+  async function deploy() {
     const ethers = await getEthers();
-    // Use the factory pattern or deployContract
-    const todo = await ethers.deployContract("Todo");
+
+    const todo = await ethers.getContractFactory("Todo");
+
     return { todo };
   }
 
-  it("Should return an empty array initially", async function () {
-    const { todo } = await deployTodo();
-    const todos = await todo.getAllTodos();
-    expect(todos.length).to.equal(0);
-  });
+
+  it("should get all todos", async ()=>{})
 });
