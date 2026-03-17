@@ -79,7 +79,7 @@ const main = async () => {
 
   const usdcBefore = await USDC.balanceOf(signer.address);
   const daiBefore = await DAI.balanceOf(signer.address);
-
+  
   const removeTx = await ROUTER.removeLiquidity(
     USDC_ADDR,
     DAI_ADDR,
