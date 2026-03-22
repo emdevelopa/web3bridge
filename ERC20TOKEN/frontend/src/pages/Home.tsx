@@ -9,10 +9,14 @@ export const Home = () => {
   const { open } = useAppKit();
   const { address } = useAppKitAccount();
 
+
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
         {/* Header Section */}
+<button onClick={openInMetaMask}>
+  Open in MetaMask
+</button>
         <header className="w-full flex flex-col items-center text-center gap-4">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium">
             Next-Gen Token Faucet
