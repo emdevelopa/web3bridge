@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-4cb1d981ab1395b58f4c8b2d7c50e3c0b8e2ab26",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/FaucetToken.sol": "project/contracts/FaucetToken.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/FaucetToken.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\nerror INSUFFICIENT_BALANCE();\nerror NOT_ALLOWED();\nerror NOT_OWNER();\nerror MAX_SUPPLY_EXCEEDED();\nerror WAIT_FOR_24_HOURS();\n\ncontract FaucetToken {\n    address public owner;\n\n    string public TokenName = \"Pluto\";\n    string public Symbol = \"PLT\";\n    uint public decimals = 18;\n\n    uint public MAX_SUPPLY = 10_000_000 ether;\n\n    uint public TotalSupply;\n\n    uint256 public faucetAmount = 2 ether;\n    constructor() {\n        owner = msg.sender;\n    }\n\n    //   stores the balance of a token\n    mapping(address => uint) public balanceOf;\n\n    mapping(address => mapping(address => uint)) allowance;\n\n    mapping(address => uint256) public lastRequestTime;\n\n    modifier OnlyOwner() {\n        if (msg.sender != owner) revert NOT_OWNER();\n        _;\n    }\n\n    event Transfer(address indexed from, address indexed to, uint256 value);\n    event Approval(\n        address indexed owner,\n        address indexed spender,\n        uint256 value\n    );\n\n    function transfer(address _to, uint _amount) external returns (bool) {\n        if (_amount > balanceOf[msg.sender]) revert INSUFFICIENT_BALANCE();\n        // if(balanceOf[msg.sender] < _amount) revert INSUFFICIENT_BALANCE();\n\n        balanceOf[msg.sender] = balanceOf[msg.sender] - _amount;\n\n        balanceOf[_to] = balanceOf[_to] + _amount;\n\n        emit Transfer(msg.sender, _to, _amount);\n        return true;\n    }\n\n    function approve(address spender, uint _amount) external returns (bool) {\n        if (_amount > balanceOf[msg.sender]) revert INSUFFICIENT_BALANCE();\n\n        \n        allowance[msg.sender][spender] = _amount;\n\n        emit Approval(msg.sender, spender, _amount);\n        return true;\n    }\n\n    function transferFrom(\n        address _from,\n        address _to,\n        uint _amount\n    ) external returns (bool) {\n        if (balanceOf[_from] < _amount) revert INSUFFICIENT_BALANCE();\n        if (allowance[_from][msg.sender] < _amount) revert NOT_ALLOWED();\n\n        balanceOf[_from] = balanceOf[_from] - _amount;\n        allowance[_from][msg.sender] = balanceOf[_from] - _amount;\n\n        balanceOf[_to] = balanceOf[_to] + _amount;\n\n        return true;\n    }\n\n    function _mint(address to, uint amount) internal {\n        if (TotalSupply + amount > MAX_SUPPLY) revert MAX_SUPPLY_EXCEEDED();\n\n        TotalSupply = TotalSupply + amount;\n        balanceOf[to] = balanceOf[to] + amount;\n    }\n\n    //Creating Token by the owner\n    function mint(address to, uint amount) public OnlyOwner {\n        _mint(to, amount);\n    }\n\n    function requestToken() public {\n        if (block.timestamp < lastRequestTime[msg.sender] + 1 days)\n            revert WAIT_FOR_24_HOURS();\n\n        _mint(msg.sender, faucetAmount);\n\n        lastRequestTime[msg.sender] = block.timestamp;\n    }\n}\n"
+      }
+    }
+  }
+}

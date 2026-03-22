@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-[#030712] text-slate-200 antialiased selection:bg-blue-500/30;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(220, 100%, 10%, 1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(260, 100%, 10%, 1) 0, transparent 50%),
+      radial-gradient(at 50% 100%, hsla(210, 100%, 10%, 1) 0, transparent 50%);
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar for a more professional look */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-slate-900/50 backdrop-blur-xl border border-slate-800 shadow-2xl;
+  }
+}
