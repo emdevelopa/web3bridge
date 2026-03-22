@@ -9,17 +9,15 @@ export const Home = () => {
   const { open } = useAppKit();
   const { address } = useAppKitAccount();
 
-const openInMetaMask = () => {
-  const dappUrl = window.location.href.replace(/^https?:\/\//, "");
-  window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
-};
+  // const openInMetaMask = () => {
+  //   const dappUrl = window.location.href.replace(/^https?:\/\//, "");
+  //   window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+  // };
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
         {/* Header Section */}
-<button onClick={openInMetaMask}>
-  Open in MetaMask
-</button>
+        {/* <button onClick={openInMetaMask}>Open in MetaMask</button> */}
         <header className="w-full flex flex-col items-center text-center gap-4">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium">
             Next-Gen Token Faucet
@@ -28,12 +26,13 @@ const openInMetaMask = () => {
             Pluto Token Dashboard
           </h1>
           <p className="max-w-2xl text-slate-400 text-lg">
-            A premium, high-performance dashboard for claiming, minting, and transferring Pluto (PLT) tokens on the Lisk Sepolia network.
+            A premium, high-performance dashboard for claiming, minting, and
+            transferring Pluto (PLT) tokens on the Lisk Sepolia network.
           </p>
-          
+
           <div className="mt-4">
-            <Button 
-              onClick={() => open()} 
+            <Button
+              onClick={() => open()}
               variant={!address ? "primary" : "outline"}
               className="min-w-[240px] group"
             >
@@ -62,12 +61,13 @@ const openInMetaMask = () => {
 
         {/* Stats Section */}
         <section className="w-full border-t border-slate-800 pt-12">
-           <ReadCards />
+          <ReadCards />
         </section>
 
         {/* Footer */}
         <footer className="w-full text-center text-slate-500 text-sm pb-8">
-          &copy; {new Date().getFullYear()} Pluto Finance. Built with Hardhat 3 and React 19.
+          &copy; {new Date().getFullYear()} Pluto Finance. Built with Hardhat 3
+          and React 19.
         </footer>
       </div>
     </div>
