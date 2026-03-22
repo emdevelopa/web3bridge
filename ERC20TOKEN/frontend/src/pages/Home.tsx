@@ -9,7 +9,10 @@ export const Home = () => {
   const { open } = useAppKit();
   const { address } = useAppKitAccount();
 
-
+const openInMetaMask = () => {
+  const dappUrl = window.location.href.replace(/^https?:\/\//, "");
+  window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+};
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
