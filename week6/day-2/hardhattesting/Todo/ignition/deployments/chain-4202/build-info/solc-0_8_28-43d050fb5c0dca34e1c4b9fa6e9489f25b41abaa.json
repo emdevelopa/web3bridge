@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-43d050fb5c0dca34e1c4b9fa6e9489f25b41abaa",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/Todo.sol": "project/contracts/Todo.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Todo.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\ncontract Todo {\n    // createTodo\n    // deleteTodo\n    // UpdateTodo\n    // markTodoCompleted\n    // markTodoUncompleted\n    // getAllTodos\n\n    struct TodoFields {\n        uint8 id;\n        string title;\n        bool completed;\n        uint timeCompleted;\n    }\n\n    TodoFields[] Todos;\n    uint8 todoId;\n\n    // uint[] nums = [1,2,3,4,5,6,9,10];\n\n    // For testing Swap and Popu\n    // function SwapItemAndPop() external returns(uint[] memory){\n    //     nums[2] = nums[6];\n\n    //     return nums;\n    // }\n\n    function getAllTodos() external view returns (TodoFields[] memory) {\n        return Todos;\n    }\n\n    function createTodo(string memory _title) external {\n        todoId = todoId + 1;\n\n        /* need to create a struct first and then push  the struct to the array too store it in the blockchain state */\n        TodoFields memory todo = TodoFields({\n            id: todoId,\n            title: _title,\n            completed: false,\n            timeCompleted: 0\n        });\n\n        Todos.push(todo);\n    }\n\n    function markCompleted(uint8 _id) external {\n        // check is todo exists before marking completed for delete, mark, unmark and update..\n        for (uint i = 0; i < Todos.length; i++) {\n            require(Todos[i].id == _id, \"Todo does not exist\");\n            if (Todos[i].id == _id) {\n                Todos[i].completed = true;\n                Todos[i].timeCompleted = block.timestamp;\n                break;\n            }\n        }\n    }\n    function markUnCompleted(uint8 _id) external {\n        for (uint i = 0; i < Todos.length; i++) {\n            require(Todos[i].id == _id, \"Todo does not exist\");\n            if (Todos[i].id == _id) {\n                Todos[i].completed = false;\n                Todos[i].timeCompleted = 0;\n                break;\n            }\n        }\n    }\n\n    function deleteTodo(uint _id) external {\n        for (uint i = 0; i < Todos.length; i++) {\n            require(Todos[i].id == _id, \"Todo does not exist\");\n            if (Todos[i].id == _id) {\n                Todos[i] = Todos[Todos.length - 1];\n                Todos.pop();\n                break;\n            }\n        }\n    }\n\n    function updateTodo(uint _id, string memory _title) external {\n        for (uint i = 0; i < Todos.length; i++) {\n            if (Todos[i].id == _id) {\n                require(Todos[i].id == _id, \"Todo does not exist\");\n                require(\n                    !Todos[i].completed,\n                    \"Todo completed, can't update it..\"\n                );\n                Todos[i].title = _title;\n                Todos[i].timeCompleted = 0;\n                break;\n            }\n        }\n    }\n\n    // function getTodoById(uint _id) external view returns (TodoFields[] memory) {\n    //     return Todos[_id];\n    // }\n}\n"
+      }
+    }
+  }
+}

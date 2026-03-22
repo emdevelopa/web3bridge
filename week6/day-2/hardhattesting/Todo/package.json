@@ -29,5 +29,8 @@
     "or": "^0.2.0",
     "typechain": "^8.3.2",
     "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
   }
 }

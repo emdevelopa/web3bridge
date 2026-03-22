@@ -93,4 +93,8 @@ contract Todo {
             }
         }
     }
+
+    function getTodoById(uint _id) external view returns (TodoFields[] memory) {
+        return Todos[_id];
+    }
 }

@@ -1,12 +1,11 @@
 // import { useAppKitAccount } from "@reown/appkit/vue";
 import { useFaucetContract } from "../useContract";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { toast } from "react-toastify";
 
 export const useReadFaucet = () => {
   const faucetContract = useFaucetContract();
 
-  const [isGettingSymbol, setIsGettingSymbol] = useState(false);
 
   // Get Contract Symbol
   const getTokenSymbol = useCallback(async () => {
