@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from "ethers";
 
 export const jsonRpcProvider = new JsonRpcProvider(
-  import.meta.env.VITE_LISK_TESTNET_RPC_URL,
+  import.meta.env.VITE_LISK_TESTNET_RPC_URL || "https://rpc.sepolia-api.lisk.com",
 );
